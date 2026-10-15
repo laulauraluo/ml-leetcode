@@ -4,6 +4,8 @@
 
 ## 网页版
 
+在线打开：**https://laulauraluo.github.io/ml-leetcode/**
+
 - 左边：题目描述和动画。动画播放时，右边编辑器会高亮正在执行的那几行代码；改代码里的超参数（比如 `n_estimators`、`max_depth`），动画会按新参数重放。
 - 右边：写代码，点「运行测试」直接在浏览器里跑 Python（[Pyodide](https://pyodide.org)，不用装环境）。代码会自动存在你的浏览器里。
 
