@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ml-leetcode</title>
+<meta name="description" content="手写 ML 算法的刷题网站：题目、浏览器里跑 Python 测试、和代码联动的训练动画">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<style>
+:root{--bg:#f4f3ee;--panel:#fff;--panel-2:#f1efe8;--text:#2c2c2a;--muted:#5f5e5a;--border:#d3d1c7;--accent:#534AB7;--accent-bg:#eeedfe;--pass:#3B6D11;--pass-bg:#eaf3de;--fail:#A32D2D;--fail-bg:#fcebeb;--easy:#0F6E56;--easy-bg:#e1f5ee;--mid:#854F0B;--mid-bg:#faeeda;--hl:rgba(127,119,221,.22);--kw:#534AB7;--str:#0F6E56;--com:#888780;--num:#993C1D;--def:#185FA5}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1a19;--panel:#252523;--panel-2:#2e2e2c;--text:#f1efe8;--muted:#b4b2a9;--border:#444441;--accent:#AFA9EC;--accent-bg:#3C3489;--pass:#97C459;--pass-bg:#27500A;--fail:#F09595;--fail-bg:#791F1F;--easy:#5DCAA5;--easy-bg:#085041;--mid:#FAC775;--mid-bg:#633806;--hl:rgba(175,169,236,.22);--kw:#AFA9EC;--str:#5DCAA5;--com:#888780;--num:#F0997B;--def:#85B7EB}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Segoe UI",sans-serif;display:flex;flex-direction:column}
+button,select{font:inherit;color:inherit}
+a{color:var(--accent)}
+.btn{border:1px solid var(--border);background:var(--panel);border-radius:6px;padding:3px 12px;cursor:pointer}
+.btn:hover{background:var(--panel-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.btn:disabled{opacity:.6;cursor:wait}
+header{display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.logo{font-weight:600;font-size:16px}
+select{border:1px solid var(--border);background:var(--panel);border-radius:6px;padding:4px 8px;max-width:100%}
+.badge{font-size:12px;padding:1px 10px;border-radius:99px}
+.hint{color:var(--muted)}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:8px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.tabs{display:flex;align-items:flex-end;gap:2px;padding:6px 8px 0;background:var(--panel-2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tab{border:0;background:none;padding:6px 12px;border-radius:6px 6px 0 0;color:var(--muted);cursor:pointer}
+.tab.on{background:var(--panel);color:var(--text);font-weight:600}
+.tools{margin-left:auto;display:flex;gap:6px;padding-bottom:6px}
+.scroll{flex:1;min-height:0;overflow:auto;padding:16px 20px}
+#desc h1{font-size:20px;margin:0 0 12px}
+#desc h2{font-size:16px;margin:20px 0 8px}
+#desc table{border-collapse:collapse;width:100%;font-size:13px}
+#desc th,#desc td{border:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:top}
+#desc code,.chip{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--panel-2);padding:1px 5px;border-radius:4px}
+#editor{flex:1;min-height:0;position:relative}
+.CodeMirror{position:absolute;inset:0;height:auto;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--panel);color:var(--text)}
+.CodeMirror-gutters{background:var(--panel-2);border-right:1px solid var(--border)}
+.CodeMirror-linenumber{color:var(--com)}
+.CodeMirror-cursor{border-left-color:var(--text)}
+.CodeMirror-selected,.CodeMirror-focused .CodeMirror-selected{background:var(--accent-bg)!important}
+.cm-s-default .cm-keyword{color:var(--kw)}.cm-s-default .cm-string{color:var(--str)}.cm-s-default .cm-comment{color:var(--com)}.cm-s-default .cm-number{color:var(--num)}.cm-s-default .cm-def,.cm-s-default .cm-builtin,.cm-s-default .cm-variable-2{color:var(--def)}.cm-s-default .cm-variable,.cm-s-default .cm-property,.cm-s-default .cm-operator{color:var(--text)}
+.cm-hl{background:var(--hl);box-shadow:inset 3px 0 var(--accent)}
+#console{height:36%;border-top:1px solid var(--border);overflow:auto;padding:10px 14px;font-size:13px}
+.sum{font-weight:600;margin:0 0 6px}.sum.ok{color:var(--pass)}.sum.bad{color:var(--fail)}
+.t{display:flex;gap:8px;flex-wrap:wrap;padding:3px 8px;border-radius:6px;margin:2px 0}.t.ok{background:var(--pass-bg)}.t.bad{background:var(--fail-bg)}
+.t .msg{color:var(--muted);word-break:break-word}
+pre.out{background:var(--panel-2);padding:8px 10px;border-radius:6px;white-space:pre-wrap;margin:4px 0 0;font-size:12.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.vctl{display:flex;gap:6px;align-items:center;margin:10px 0 6px;flex-wrap:wrap}
+.vstatus{font-size:13px;color:var(--muted);min-height:2.9em;line-height:1.45}
+.vstatus b{color:var(--accent)}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cap{font-size:12px;color:var(--muted);margin:0 0 4px;min-height:2.8em;line-height:1.4}
+canvas.cv{width:100%;aspect-ratio:4/3;display:block;border-radius:6px;border:1px solid var(--border)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.thumbs{display:flex;flex-wrap:wrap;gap:3px;margin:8px 0 0;min-height:24px}
+.thumbs canvas{width:32px;height:24px;border-radius:3px;border:1px solid var(--border)}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 0}
+.metric{background:var(--panel-2);border-radius:8px;padding:8px 12px}
+.metric p{margin:0}.metric .l{font-size:12px;color:var(--muted)}.metric .v{font-size:20px;font-weight:600}
+.note{font-size:12px;color:var(--muted);margin:12px 0 0}
+@media (max-width:900px){html,body{height:auto}main{display:flex;flex-direction:column}#editor{height:420px;flex:none}#console{height:auto;max-height:60vh}.g3,.metrics{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">ml-leetcode</span>
+  <select id="pick" aria-label="选择题目"></select>
+  <span class="badge" id="level"></span>
+  <span style="flex:1"></span>
+  <a href="https://github.com/laulauraluo/ml-leetcode" target="_blank" rel="noopener">GitHub</a>
+</header>
+<main>
+  <section class="panel">
+    <div class="tabs">
+      <button class="tab on" data-left="desc">题目描述</button>
+      <button class="tab" data-left="viz">动画 · 和代码联动</button>
+    </div>
+    <div class="scroll" id="desc"><p class="hint">加载中…</p></div>
+    <div class="scroll" id="viz" hidden>
+      <div class="chips"><span class="hint">从你的代码读到：</span><span class="chips" id="chips"></span></div>
+      <p class="hint" style="font-size:12px;margin:6px 0 0">改右边代码里的超参数，动画会按新参数重放；播放时右边会高亮正在执行的代码行。</p>
+      <div class="vctl">
+        <button class="btn" id="v-play">播放</button>
+        <button class="btn" id="v-step">下一步</button>
+        <button class="btn" id="v-reset">重来</button>
+      </div>
+      <div class="vstatus" id="v-status" aria-live="polite"></div>
+      <div class="g3">
+        <div><p class="cap" id="cap-dt"></p><canvas class="cv" id="cv-dt"></canvas></div>
+        <div><p class="cap" id="cap-cur"></p><canvas class="cv" id="cv-cur"></canvas></div>
+        <div><p class="cap" id="cap-rf"></p><canvas class="cv" id="cv-rf"></canvas></div>
+      </div>
+      <div class="legend">
+        <span><i style="width:9px;height:9px;border-radius:50%;background:#1D9E75"></i>class 0</span>
+        <span><i style="width:9px;height:9px;border-radius:50%;background:#D85A30"></i>class 1</span>
+        <span><i style="width:8px;height:8px;border-radius:50%;border:1px solid var(--muted)"></i>OOB（这棵没抽到）</span>
+        <span><i style="width:13px;height:13px;border-radius:50%;background:#888780"></i>被抽到多次</span>
+        <span><i style="width:14px;height:3px;background:#7F77DD"></i>刚切的一刀</span>
+      </div>
+      <div class="thumbs" id="v-th"></div>
+      <div class="metrics">
+        <div class="metric"><p class="l">单棵树 test acc</p><p class="v" id="m-dt">–</p></div>
+        <div class="metric"><p class="l">森林 test acc</p><p class="v" id="m-rf">–</p></div>
+        <div class="metric"><p class="l">这棵树抽到的不同点占比</p><p class="v" id="m-bt">–</p></div>
+      </div>
+      <p class="note">动画用 2 维 moons 数据（120 个训练点、600 个测试点）演示同样的训练过程，方便画出来；真实分数以右边「运行测试」为准。</p>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="tabs">
+      <button class="tab on" data-doc="solution">solution.py</button>
+      <button class="tab" data-doc="reference">reference.py（答案）</button>
+      <div class="tools"><button class="btn" id="reset">重置代码</button><button class="btn primary" id="run">运行测试</button></div>
+    </div>
+    <div id="editor"></div>
+    <div id="console"></div>
+  </section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const store = {
+  get: k => { try { return localStorage.getItem(k) } catch { return null } },
+  set: (k, v) => { try { localStorage.setItem(k, v) } catch {} },
+};
+
+// ---------- 题目清单：加新题就在这里加一行 ----------
+const kv = (code, re) => { const m = code.match(re), o = {}; if (m) for (const [, k, v] of m[1].matchAll(/(\w+)\s*=\s*([^,\s)]+)/g)) o[k] = v.replace(/['"]/g, ''); o.found = !!m; return o };
+const num = (v, d) => v === undefined ? d : v === 'None' ? null : Number.isFinite(+v) ? +v : d;
+const clampTrees = n => Math.max(1, Math.min(100, n ?? 100));
+const PROBLEMS = [
+  {
+    id: '001', slug: '001_rf_vs_decision_tree', title: 'Random forest vs decision tree（sklearn）', level: 'Easy',
+    params(code) {
+      const rf = kv(code, /RandomForestClassifier\s*\(([^)]*)\)/), dt = kv(code, /DecisionTreeClassifier\s*\(([^)]*)\)/);
+      const mf = rf.max_features;
+      return {
+        nTrees: clampTrees(num(rf.n_estimators, 100)), rfDepth: num(rf.max_depth, null), dtDepth: num(dt.max_depth, null),
+        nFeats: mf === undefined || mf === 'sqrt' || mf === 'log2' ? 1 : mf === 'None' ? 2 : +mf < 1 ? Math.max(1, Math.round(+mf * 2)) : Math.min(2, Math.max(1, +mf || 1)),
+        seed: num(rf.random_state, null),
+        chips: rf.found
+          ? [`n_estimators=${rf.n_estimators ?? 100}`, `max_features=${mf ?? 'sqrt'}`, `max_depth=${rf.max_depth ?? 'None'}`, `random_state=${rf.random_state ?? 'None'}`, `DecisionTree max_depth=${dt.max_depth ?? 'None'}`]
+          : ['代码里还没有 RandomForestClassifier(...)，先按默认参数演示'],
+      };
+    },
+    sync: { dt: [/dt_model\.fit\(/, /^#\s*3\./], dtDone: [/dt_score\s*=/], boot: [/rf_model\.fit\(/, /^#\s*4\./], grow: [/rf_model\.fit\(/, /^#\s*4\./], vote: [/rf_score\s*=/], done: [/^print\(/] },
+  },
+  {
+    id: '002', slug: '002_random_forest_from_scratch', title: '手写 random forest（numpy）', level: 'Medium',
+    params(code) {
+      const o = kv(code, /def random_forest\s*\(([^)]*)\)/);
+      return {
+        nTrees: clampTrees(num(o.n_trees, 25)), rfDepth: null, dtDepth: null,
+        nFeats: o.n_feats === 'None' ? 2 : Math.min(2, Math.max(1, num(o.n_feats, 1) ?? 1)), seed: 7,
+        chips: [`n_trees=${o.n_trees ?? 25}`, `n_feats=${o.n_feats ?? 1}`],
+      };
+    },
+    sync: { dt: [/for f in feats/, /score\s*=.*gini/], dtDone: [], boot: [/bootstrap\(len/], grow: [/feats\s*=.*choice/, /score\s*=.*gini/], vote: [/predict\(t, x\) for t in trees/], done: [] },
+  },
+];
+
+// ---------- 动画：和 002 的 reference.py 是同一个算法 ----------
+const NTR = 120, NTE = 600, NZ = 0.3, X0 = -1.6, X1 = 2.6, Y0 = -1.3, Y1 = 1.85, GX = 120, GY = 90, FN = ['x₁', 'x₂'];
+const mulberry = a => () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 };
+const drnd = mulberry(11), gs = () => Math.sqrt(-2 * Math.log(1 - drnd())) * Math.cos(2 * Math.PI * drnd());
+const moons = n => Array.from({ length: n }, () => { const t = drnd() * Math.PI, y = drnd() < .5 ? 0 : 1, b = y ? [1 - Math.cos(t), .5 - Math.sin(t)] : [Math.cos(t), Math.sin(t)]; return { x: [b[0] + NZ * gs(), b[1] + NZ * gs()], y } });
+const TR = moons(NTR), TE = moons(NTE);
+TR.forEach((p, i) => p.i = i);
+const gini = (k, n) => { const q = k / n; return 1 - q * q - (1 - q) * (1 - q) };
+
+function build(pts, o, box, depth) {
+  const c1 = pts.reduce((s, p) => s + p.y, 0), nd = { box, maj: c1 * 2 > pts.length ? 1 : 0 };
+  if (c1 === 0 || c1 === pts.length || (o.maxDepth != null && depth >= o.maxDepth)) return nd;
+  let best = null;
+  for (const f of o.nFeats === 1 ? [o.rnd() < .5 ? 0 : 1] : [0, 1]) {
+    const s = [...pts].sort((a, b) => a.x[f] - b.x[f]); let l1 = 0;
+    for (let i = 0; i < s.length - 1; i++) {
+      l1 += s[i].y; if (s[i].x[f] === s[i + 1].x[f]) continue;
+      const nl = i + 1, nr = s.length - nl, sc = (nl * gini(l1, nl) + nr * gini(c1 - l1, nr)) / s.length;
+      if (!best || sc < best.sc - 1e-12) best = { sc, f, t: (s[i].x[f] + s[i + 1].x[f]) / 2 };
+    }
+  }
+  if (!best) return nd;
+  Object.assign(nd, best);
+  const lb = [...box], rb = [...box];
+  if (best.f === 0) { lb[1] = best.t; rb[0] = best.t } else { lb[3] = best.t; rb[2] = best.t }
+  nd.L = build(pts.filter(p => p.x[best.f] <= best.t), o, lb, depth + 1);
+  nd.R = build(pts.filter(p => p.x[best.f] > best.t), o, rb, depth + 1);
+  return nd;
+}
+const bfs = r => { const q = [r], o = []; while (q.length) { const n = q.shift(); if (n.L) { o.push(n); q.push(n.L, n.R) } } return o };
+const predShown = (n, x) => { while (n.L && n.rev) n = x[n.f] <= n.t ? n.L : n.R; return n.maj };
+const predFull = (n, x) => { while (n.L) n = x[n.f] <= n.t ? n.L : n.R; return n.maj };
+const cells = []; for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) cells.push([X0 + (i + .5) / GX * (X1 - X0), Y1 - (j + .5) / GY * (Y1 - Y0)]);
+const grid = (r, f) => Float32Array.from(cells, x => f(r, x));
+const accOf = (P, f) => P.filter(p => f(p.x) === p.y).length / P.length;
+const pct = v => (v * 100).toFixed(1) + '%';
+
+const mq = matchMedia('(prefers-color-scheme: dark)');
+const palette = d => d
+  ? { n: [46, 46, 44], a: [8, 80, 65], b: [113, 43, 19], pa: '#5DCAA5', pb: '#F0997B', ln: '#B4B2A9', hl: '#AFA9EC', oob: 'rgba(180,178,169,.7)' }
+  : { n: [255, 255, 255], a: [159, 225, 203], b: [245, 196, 179], pa: '#0F6E56', pb: '#993C1D', ln: '#5F5E5A', hl: '#534AB7', oob: 'rgba(95,94,90,.55)' };
+let C = palette(mq.matches);
+mq.addEventListener('change', e => { C = palette(e.matches); render() });
+const mix = v => { const t = Math.abs(v - .5) * 2, e = v < .5 ? C.a : C.b; return C.n.map((c, k) => Math.round(c + (e[k] - c) * t)) };
+const off = document.createElement('canvas'); off.width = GX; off.height = GY;
+const oc = off.getContext('2d'), img = oc.createImageData(GX, GY);
+function fillImg(fr) { for (let k = 0; k < GX * GY; k++) { const c = fr ? mix(fr[k]) : C.n; img.data.set([c[0], c[1], c[2], 255], 4 * k) } oc.putImageData(img, 0, 0) }
+function paint(cv, fr, splits, hl, cnt) {
+  const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1, w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h }
+  const ctx = cv.getContext('2d');
+  fillImg(fr); ctx.imageSmoothingEnabled = false; ctx.drawImage(off, 0, 0, w, h);
+  const px = x => (x - X0) / (X1 - X0) * w, py = y => (Y1 - y) / (Y1 - Y0) * h;
+  const line = (n, col, lw) => { ctx.strokeStyle = col; ctx.lineWidth = lw * d; ctx.beginPath(); if (n.f === 0) { ctx.moveTo(px(n.t), py(n.box[2])); ctx.lineTo(px(n.t), py(n.box[3])) } else { ctx.moveTo(px(n.box[0]), py(n.t)); ctx.lineTo(px(n.box[1]), py(n.t)) } ctx.stroke() };
+  splits.forEach(n => line(n, C.ln, 1));
+  for (const p of TR) {
+    const c = cnt ? cnt[p.i] : 1; ctx.beginPath();
+    if (c === 0) { ctx.arc(px(p.x[0]), py(p.x[1]), 2.2 * d, 0, 7); ctx.strokeStyle = C.oob; ctx.lineWidth = d; ctx.stroke() }
+    else { ctx.arc(px(p.x[0]), py(p.x[1]), (cnt ? 1.4 + 1.1 * Math.min(c, 4) : 2.2) * d, 0, 7); ctx.fillStyle = p.y ? C.pb : C.pa; ctx.fill() }
+  }
+  if (hl) line(hl, C.hl, 2.5);
+}
+function thumb(fr) { const cv = document.createElement('canvas'); cv.width = 64; cv.height = 48; fillImg(fr); const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.drawImage(off, 0, 0, 64, 48); $('v-th').append(cv) }
+
+const V = { key: null, params: null, S: null, timer: null, playing: false, active: false };
+function vizReset() {
+  const p = V.params; if (!p) return;
+  const dt = build(TR, { nFeats: null, maxDepth: p.dtDepth }, [X0, X1, Y0, Y1], 0);
+  V.S = {
+    p, rnd: mulberry(p.seed ?? Math.floor(Math.random() * 1e9)), phase: 'dt', k: 0, cur: null,
+    dt: { root: dt, order: bfs(dt), s: 0, hl: null, test: accOf(TE, x => predFull(dt, x)), train: accOf(TR, x => predFull(dt, x)) },
+    votes: new Float32Array(GX * GY), tv: new Float32Array(NTE),
+  };
+  $('v-th').innerHTML = '';
+  V.playing = V.active; render(); loop();
+}
+function newTree() {
+  const S = V.S, cnt = new Array(NTR).fill(0), pts = [];
+  for (let i = 0; i < NTR; i++) { const j = Math.floor(S.rnd() * NTR); cnt[j]++; pts.push(TR[j]) }
+  const root = build(pts, { rnd: S.rnd, nFeats: S.p.nFeats, maxDepth: S.p.rfDepth }, [X0, X1, Y0, Y1], 0);
+  return { root, order: bfs(root), s: 0, cnt, uniq: cnt.filter(c => c).length, hl: null };
+}
+function addToForest() {
+  const S = V.S, root = S.cur.root, g = grid(root, predFull);
+  for (let k = 0; k < g.length; k++) S.votes[k] += g[k];
+  TE.forEach((p, i) => S.tv[i] += predFull(root, p.x));
+  S.k++; thumb(g);
+}
+const treeNo = () => V.S.k + (V.S.phase === 'vote' ? 0 : 1);
+const slow = () => treeNo() <= 2;
+function step() {
+  const S = V.S; if (S.phase === 'done') return;
+  if (S.phase === 'dt') {
+    const d = S.dt;
+    if (d.s < d.order.length) { const n = d.order[d.s++]; n.rev = true; d.hl = n } else { d.hl = null; S.phase = 'dtDone' }
+  } else if (S.phase === 'dtDone' || S.phase === 'vote') {
+    if (S.k >= S.p.nTrees) S.phase = 'done'; else { S.cur = newTree(); S.phase = 'boot' }
+  } else {
+    const c = S.cur;
+    if (!slow()) { c.order.forEach(n => n.rev = true); c.s = c.order.length }
+    if (c.s < c.order.length) { const n = c.order[c.s++]; n.rev = true; c.hl = n; S.phase = 'grow' }
+    else { c.hl = null; S.phase = 'vote'; addToForest() }
+  }
+  render();
+}
+const delay = () => ({ dt: 150, dtDone: 1400, boot: slow() ? 1500 : 50, grow: 260, vote: slow() ? 1100 : 60 })[V.S.phase];
+function loop() {
+  clearTimeout(V.timer);
+  if (V.playing && V.S && V.S.phase !== 'done') V.timer = setTimeout(() => { step(); loop() }, delay());
+  $('v-play').textContent = V.playing && V.S.phase !== 'done' ? '暂停' : V.S && V.S.phase === 'done' ? '再来一遍' : '播放';
+}
+function statusText() {
+  const S = V.S, p = S.p, d = S.dt, c = S.cur, n = c && c.hl, no = treeNo();
+  switch (S.phase) {
+    case 'dt': return `单棵 decision tree · 在全部 ${NTR} 个点上找切分，每个节点两个 feature 都试，挑 Gini 降得最多的那刀（第 ${d.s}/${d.order.length} 刀）`;
+    case 'dtDone': return `单棵树训完：${d.order.length} 刀，训练集 acc ${pct(d.train)}，test acc ${pct(d.test)}。接下来训森林`;
+    case 'boot': return `Tree #${no} · 第 1 步 bootstrap：有放回抽 ${NTR} 次，抽到 ${c.uniq} 个不同点，其余 ${NTR - c.uniq} 个是 OOB（空心）`;
+    case 'grow': return `Tree #${no} · 第 2 步 长树：${p.nFeats === 1 ? '这个节点随机只看 ' + FN[n.f] : '两个 feature 都试，选了 ' + FN[n.f]}，切在 ${FN[n.f]} = ${n.t.toFixed(2)}（第 ${c.s}/${c.order.length} 刀）`;
+    case 'vote': return `Tree #${no} · 第 3 步 进森林投票：森林现在 ${S.k} 棵树${no === 2 && p.nTrees > 2 ? '，后面的树快进' : ''}`;
+    default: return `训完 ${p.nTrees} 棵树。对比左右两张图：单棵树为了个别 noise 点切出的孤岛，在森林里被投票抹平了`;
+  }
+}
+function render() {
+  const S = V.S; if (!S) return;
+  const p = S.p, d = S.dt, c = S.cur;
+  paint($('cv-dt'), grid(d.root, predShown), d.order.slice(0, d.s), d.hl, null);
+  if (c) paint($('cv-cur'), grid(c.root, predShown), c.order.slice(0, c.s), c.hl, c.cnt); else paint($('cv-cur'), null, [], null, null);
+  paint($('cv-rf'), S.k ? S.votes.map(v => v / S.k) : null, [], null, null);
+  $('cap-dt').textContent = `单棵 decision tree（全部数据、全部 feature${p.dtDepth != null ? '，max_depth=' + p.dtDepth : ''}）· ${d.s} 刀`;
+  $('cap-cur').textContent = c ? `Tree #${treeNo()}（bootstrap 样本${p.nFeats === 1 ? '，每个节点随机 1 个 feature' : ''}）· ${c.s} 刀` : '森林里的树：等单棵树训完再开始';
+  $('cap-rf').textContent = `Forest 投票（${S.k}/${p.nTrees} 棵），颜色越淡越不确定`;
+  $('m-dt').textContent = S.phase === 'dt' ? '–' : pct(d.test);
+  $('m-rf').textContent = S.k ? pct(S.tv.filter((v, i) => (v * 2 > S.k ? 1 : 0) === TE[i].y).length / NTE) : '–';
+  $('m-bt').textContent = c ? `${Math.round(c.uniq / NTR * 100)}%` : '–';
+  const st = $('v-status'); st.textContent = statusText();
+  if (!V.active) return;
+  const lines = highlight(S.phase);
+  if (lines.length) { const b = document.createElement('b'); b.textContent = ` ↔ 代码第 ${lines.join('、')} 行`; st.append(b) }
+  else if (docName === 'solution' && (P.sync[S.phase] || []).length) st.append(' · 切到 reference.py 能看到对应的代码行');
+}
+
+// ---------- 编辑器 + 代码高亮联动 ----------
+let P, docs, starter, testSrc, docName = 'solution', hlLines = [], codeTimer;
+const cm = CodeMirror($('editor'), {
+  mode: 'python', lineNumbers: true, indentUnit: 4,
+  extraKeys: { 'Cmd-Enter': () => run(), 'Ctrl-Enter': () => run(), Tab: c => c.execCommand(c.somethingSelected() ? 'indentMore' : 'insertSoftTab') },
+});
+function clearHl() { hlLines.forEach(h => cm.removeLineClass(h, 'background', 'cm-hl')); hlLines = [] }
+function highlight(phase) {
+  clearHl();
+  const res = P.sync[phase] || [];
+  cm.eachLine(h => { if (res.some(r => r.test(h.text))) { cm.addLineClass(h, 'background', 'cm-hl'); hlLines.push(h) } });
+  if (hlLines.length) cm.scrollIntoView({ line: cm.getLineNumber(hlLines[0]), ch: 0 }, 80);
+  return hlLines.map(h => cm.getLineNumber(h) + 1);
+}
+function onCode() {
+  clearTimeout(codeTimer);
+  codeTimer = setTimeout(() => {
+    const np = P.params(cm.getValue());
+    $('chips').replaceChildren(...np.chips.map(t => Object.assign(document.createElement('span'), { className: 'chip', textContent: t })));
+    const key = JSON.stringify({ ...np, chips: 0 });
+    if (key !== V.key) { V.key = key; V.params = np; vizReset() }
+  }, 400);
+}
+function showDoc(name) {
+  clearHl(); docName = name;
+  cm.swapDoc(docs[name]); cm.setOption('readOnly', name === 'reference');
+  document.querySelectorAll('[data-doc]').forEach(b => b.classList.toggle('on', b.dataset.doc === name));
+  $('reset').hidden = name !== 'solution';
+  onCode();
+}
+cm.on('change', () => { if (docName === 'solution') store.set('mlleet:' + P.slug, docs.solution.getValue()); onCode() });
+document.querySelectorAll('[data-doc]').forEach(b => b.onclick = () => showDoc(b.dataset.doc));
+document.querySelectorAll('[data-left]').forEach(b => b.onclick = () => {
+  const v = b.dataset.left === 'viz';
+  document.querySelectorAll('[data-left]').forEach(x => x.classList.toggle('on', x === b));
+  $('desc').hidden = v; $('viz').hidden = !v; V.active = v;
+  V.playing = v && !!V.S && V.S.phase !== 'done';
+  if (!v) clearHl();
+  render(); loop();
+});
+$('v-play').onclick = () => { if (V.S.phase === 'done') vizReset(); else { V.playing = !V.playing; loop() } };
+$('v-step').onclick = () => { V.playing = false; step(); loop() };
+$('v-reset').onclick = () => vizReset();
+$('reset').onclick = () => { if (confirm('把 solution.py 恢复成初始模板？你写的代码会被覆盖。')) docs.solution.setValue(starter) };
+new ResizeObserver(() => render()).observe($('cv-cur'));
+
+// ---------- 在浏览器里跑 Python 测试（Pyodide） ----------
+const HINT = '<p class="hint">点「运行测试」（⌘/Ctrl + Enter）在浏览器里跑 Python 测试。第一次要下载 Pyodide 和依赖包，大约 10–30 秒。</p>';
+const RUNNER = `
+import sys, os, runpy, importlib
+os.chdir('/home/pyodide')
+if '/home/pyodide' not in sys.path:
+    sys.path.insert(0, '/home/pyodide')
+sys.modules.pop('solution', None)
+importlib.invalidate_caches()
+try:
+    runpy.run_path('/home/pyodide/test_solution.py', run_name='__main__')
+except SystemExit:
+    pass
+`;
+let pyReady = null;
+async function run() {
+  const btn = $('run'); if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = '运行中…';
+  const box = $('console');
+  box.innerHTML = `<p class="hint">${pyReady ? '正在跑测试…' : '正在下载 Python 环境（Pyodide），第一次大约 10–30 秒…'}</p>`;
+  try {
+    pyReady ??= loadPyodide();
+    const py = await pyReady, code = cm.getValue();
+    box.innerHTML = '<p class="hint">正在加载依赖包并跑测试…</p>';
+    await py.loadPackagesFromImports(code + '\n' + testSrc);
+    py.FS.writeFile('/home/pyodide/solution.py', code);
+    py.FS.writeFile('/home/pyodide/test_solution.py', testSrc);
+    const lines = [];
+    py.setStdout({ batched: s => lines.push(s) }); py.setStderr({ batched: s => lines.push(s) });
+    // ponytail: 跑在主线程，死循环会卡住页面；要防就把 Pyodide 挪进 Web Worker
+    await py.runPythonAsync(RUNNER);
+    showResults(lines);
+  } catch (e) {
+    box.innerHTML = '';
+    const p = Object.assign(document.createElement('p'), { className: 'sum bad', textContent: '运行出错' });
+    const pre = Object.assign(document.createElement('pre'), { className: 'out', textContent: String(e.message || e).split('\n').slice(-15).join('\n') });
+    box.append(p, pre);
+  } finally { btn.disabled = false; btn.textContent = '运行测试' }
+}
+function showResults(lines) {
+  const box = $('console'); box.innerHTML = '';
+  const add = (tag, cls, text) => { const e = Object.assign(document.createElement(tag), { className: cls, textContent: text }); box.append(e); return e };
+  const sum = lines.find(l => /^\d+\/\d+ passed$/.test(l));
+  if (sum) { const [a, b] = sum.split(' ')[0].split('/').map(Number); add('p', 'sum ' + (a === b ? 'ok' : 'bad'), a === b ? `全部通过 ${a}/${b}` : `通过 ${a}/${b}`) }
+  for (const l of lines.filter(l => /^(PASS|FAIL) /.test(l))) {
+    const ok = l.startsWith('PASS'), [name, ...rest] = l.slice(5).split(' - ');
+    const row = add('div', 't ' + (ok ? 'ok' : 'bad'), (ok ? '✓ ' : '✗ ') + name);
+    if (rest.length) row.append(Object.assign(document.createElement('span'), { className: 'msg', textContent: rest.join(' - ') }));
+  }
+  const other = lines.filter(l => !/^(PASS|FAIL) |^\d+\/\d+ passed$/.test(l));
+  if (other.length) { add('p', 'hint', 'stdout'); add('pre', 'out', other.join('\n')) }
+}
+$('run').onclick = run;
+
+// ---------- 载入题目 ----------
+$('pick').innerHTML = PROBLEMS.map(p => `<option value="${p.id}">${p.id}. ${p.title}</option>`).join('');
+$('pick').onchange = e => location.hash = e.target.value;
+async function load() {
+  P = PROBLEMS.find(p => p.id === location.hash.slice(1)) || PROBLEMS[0];
+  $('pick').value = P.id;
+  const lv = $('level'), easy = P.level === 'Easy';
+  lv.textContent = P.level; lv.style.color = `var(--${easy ? 'easy' : 'mid'})`; lv.style.background = `var(--${easy ? 'easy' : 'mid'}-bg)`;
+  document.title = `${P.id} · ml-leetcode`;
+  let files;
+  try {
+    files = await Promise.all(['README.md', 'solution.py', 'reference.py', 'test_solution.py'].map(f =>
+      fetch(`problems/${P.slug}/${f}`, { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(f + ' ' + r.status); return r.text() })));
+  } catch {
+    $('desc').innerHTML = '<p>读不到题目文件。本地打开要先在 repo 根目录跑 <code>python3 -m http.server</code>，再访问 <a href="http://localhost:8000">http://localhost:8000</a>。</p>';
+    return;
+  }
+  const [md, sol, ref, test] = files;
+  starter = sol; testSrc = test;
+  $('desc').innerHTML = marked.parse(md);
+  $('desc').querySelectorAll('a[href]').forEach(a => { const m = a.getAttribute('href').match(/(\d{3})_[^/]+\/README\.md$/); if (m) a.href = '#' + m[1]; else a.target = '_blank' });
+  clearHl();
+  docs = { solution: new CodeMirror.Doc(store.get('mlleet:' + P.slug) ?? sol, 'python'), reference: new CodeMirror.Doc(ref, 'python') };
+  V.key = null; showDoc('solution');
+  $('console').innerHTML = HINT;
+}
+window.addEventListener('hashchange', load);
+load();
+</script>
+</body>
+</html>
